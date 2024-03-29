@@ -1,17 +1,17 @@
 const mongoose = require('mongoose');
 
 const expense = new mongoose.Schema({
-    amount: {
+    cost: {
         type: Number,
         required: [true, 'The amount field is required!'],
         trim: true
     },
-    timestamp: {
+    date: {
         type: Date,
         required: [true, 'The timestamp field is required!'],
         trim: true
     },
-    type: {
+    desc: {
         type: String,
         required: [true, 'The type field is required!'],
         trim: true

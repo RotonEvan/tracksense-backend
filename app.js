@@ -1,7 +1,9 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const app = express();
+// const cors = require('cors');
 app.use(express.json());
+// app.use(cors);
 
 let expenses = [];
 
@@ -21,6 +23,7 @@ app.get('/getexpenses', (req, res) => {
 
 app.post('/addexpense', (req, res) => {
     console.log(req.body);
+    // const stExpense = JSON.parse(req.body);
     // req.body has { amount: 1000, timestamp: 1710077469631, type: 'travel', tag: 'blue' }, so we can use it to create a new Expense
 
     const expense = new Expense(req.body);
