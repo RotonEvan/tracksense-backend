@@ -12,13 +12,63 @@ const { connectDB, conn } = require('./src/db/connection');
 connectDB();
 
 const Expense = require('./src/db/expense');
+const Glance = require('./src/db/glance');
 
-app.get('/getexpenses', (req, res) => {
-    Expense.find({}).then(expenses => {
-        res.json(expenses);
-    }).catch(err => {
+
+app.get('/getexpenses', async(req, res) => {
+    // console.log(Glance.findOne({ uid: '1' }));
+    if (await Glance.countDocuments({}) === 0) {
+        console.log('Creating Glance');
+        const glance = new Glance({
+            uid: '1',
+            daily: 0,
+            weekly: 0,
+            monthly: 0
+        });
+        await glance.save();
+        // console.log('Glance created');
+    }
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const weekStart = new Date();
+    weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+
+    const monthStart = new Date();
+    monthStart.setDate(1);
+    monthStart.setHours(0, 0, 0, 0);
+
+    try {
+        const expenses = await Expense.find({});
+        const todayExpenses = expenses.filter(expense => new Date(expense.date) >= today);
+        const weeklyExpenses = expenses.filter(expense => new Date(expense.date) >= weekStart);
+        const monthlyExpenses = expenses.filter(expense => new Date(expense.date) >= monthStart);
+
+        console.log(todayExpenses);
+        // console.log(weeklyExpenses);
+        // console.log(monthlyExpenses);
+
+        const totalTodayExpense = todayExpenses.reduce((total, expense) => total + expense.cost, 0);
+        const totalWeeklyExpense = weeklyExpenses.reduce((total, expense) => total + expense.cost, 0);
+        const totalMonthlyExpense = monthlyExpenses.reduce((total, expense) => total + expense.cost, 0);
+
+        const expenseSummary = {
+            daily: totalTodayExpense,
+            weekly: totalWeeklyExpense,
+            monthly: totalMonthlyExpense
+        };
+
+        console.log(expenseSummary);
+
+        // const glance = new Glance(expenseSummary);
+        await Glance.findOneAndUpdate({ uid: '1' }, expenseSummary);
+
+        console.log({ expenseSummary, expenses });
+
+        res.json({ expenseSummary, expenses });
+    } catch (err) {
         res.status(500).send(err);
-    });
+    }
 });
 
 app.post('/addexpense', (req, res) => {
@@ -29,6 +79,7 @@ app.post('/addexpense', (req, res) => {
     const expense = new Expense(req.body);
     expense.save()
         .then(expense => {
+
             res.json(expense);
         })
         .catch(err => {
